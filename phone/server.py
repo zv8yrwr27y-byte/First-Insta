@@ -22,8 +22,8 @@ class H(BaseHTTPRequestHandler):
         if not ALLOWED.match(cmd):  # seulement les 13 skills
             self.send_response(400); self.end_headers(); return
         try:
-            out = subprocess.run(["claude", "--plugin-dir", SKILLS_DIR, "-p", cmd],
-                                 capture_output=True, text=True, timeout=300, cwd=HERE).stdout
+            out = subprocess.run(["claude", "--plugin-dir", SKILLS_DIR, "--allowedTools", "Bash(python3:*)", "-p", cmd],
+                                 capture_output=True, text=True, timeout=300, cwd=HERE).stdout or "(aucune réponse)"
         except Exception as e:
             out = f"Erreur : {e}"
         self.send_response(200); self.send_header("Content-Type", "application/json"); self.end_headers()
