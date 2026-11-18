@@ -32,6 +32,12 @@
   .go{background:#0095f6;color:#fff}.x{background:#333;color:#fff}
   .toast{position:absolute;top:104px;left:50%;transform:translateX(-50%);background:#2ecc71;color:#000;padding:8px 14px;border-radius:20px;font-size:13px;opacity:0;transition:.2s;z-index:9}
   .toast.show{opacity:1}
+  .tile,.story{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+  .info{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);width:300px;background:#1a1a22;border:1px solid #333;border-radius:20px;padding:18px;z-index:10;opacity:0;pointer-events:none;transition:.2s;box-shadow:0 10px 30px #000c}
+  .info.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  .info h4{margin:0 0 6px;font-size:16px}
+  .info p{margin:0;color:#ddd;font-size:13px;line-height:1.45}
+  .info small{display:block;margin-top:10px;color:var(--mut);font-size:11px}
 </style>
 </head>
 <body>
@@ -43,6 +49,8 @@
   <h2>Mes 13 skills</h2>
   <div class="grid" id="grid"></div>
   <nav><span>🏠</span><span>🔍</span><span>➕</span><span>🎬</span><span>👤</span></nav>
+
+  <div class="info" id="info"><h4 id="iTitle"></h4><p id="iText"></p><small>Relâche pour fermer</small></div>
 
   <div class="sheet" id="sheet">
     <h3 id="sTitle"></h3><p id="sDesc"></p>
@@ -69,13 +77,43 @@ const SKILLS=[
  ["ig-repurpose","♻️","Repurpose","Vidéo/podcast → semaine de posts","linear-gradient(135deg,#56ab2f,#a8e063)"],
  ["ig-human","🧑","Humaniser","Enlève l'empreinte IA d'un texte","linear-gradient(135deg,#606c88,#3f4c6b)"]
 ];
+// Explication simple affichée après un appui long de 3 secondes
+const INFO={
+ "ig-reel":"Crée un Reel complet : l'accroche qui retient, le texte à dire, le texte à l'écran et le découpage seconde par seconde.",
+ "ig-caption":"Écrit la légende de ta publication avec les hashtags, puis vérifie qu'elle reste lisible avant d'être publiée.",
+ "ig-carousel":"Crée un carrousel : une couverture qui donne envie de swiper, et le texte de chaque diapositive.",
+ "ig-story":"Prépare la suite de tes stories du jour, avec les stickers à utiliser à chaque étape.",
+ "ig-plan":"Organise ta semaine : quoi publier, dans quel format, à quelle heure, et qui commenter.",
+ "ig-profile":"Note ton profil sur 100, puis réécrit la bio et les parties qui te font perdre des points.",
+ "ig-viral":"Trouve les Reels qui marchent en ce moment dans ta niche et explique pourquoi ils marchent.",
+ "ig-audit":"Analyse tes anciennes publications : ce qui a marché, ce qui a raté, et ce qu'il faut arrêter.",
+ "ig-comment":"Écrit des commentaires naturels à laisser sous les publications d'autres personnes.",
+ "ig-reply":"Rédige les réponses aux commentaires sous tes propres publications, en triant ceux qui valent une réponse.",
+ "ig-dm":"Écrit des messages privés qui obtiennent une réponse, y compris pour proposer une collaboration.",
+ "ig-repurpose":"Transforme une vidéo, un podcast ou un article long en une semaine de Reels et de carrousels.",
+ "ig-human":"Enlève les tics d'IA d'un texte (tirets longs, mots typiques) pour qu'il sonne naturel."
+};
 const $=id=>document.getElementById(id);
 let cur=null;
+// Appui long (3 s) : affiche l'explication. Un clic court ouvre le panneau comme avant.
+function bindPress(el,s){
+  let timer=null,fired=false;
+  const stop=()=>{clearTimeout(timer);timer=null};
+  el.addEventListener("pointerdown",()=>{fired=false;stop();timer=setTimeout(()=>{fired=true;showInfo(s)},3000)});
+  el.addEventListener("pointerup",stop);
+  el.addEventListener("pointerleave",stop);
+  el.addEventListener("pointercancel",stop);
+  el.addEventListener("contextmenu",e=>e.preventDefault());
+  el.addEventListener("click",e=>{if(fired){fired=false;e.stopImmediatePropagation();e.preventDefault();return}openSheet(s)},true);
+}
+function showInfo(s){$("iTitle").textContent=s[1]+" "+s[2];$("iText").textContent=INFO[s[0]];$("info").classList.add("show");setTimeout(hideInfo,6000)}
+function hideInfo(){$("info").classList.remove("show")}
+$("info").addEventListener("pointerdown",hideInfo);
 SKILLS.forEach(s=>{
   const b=document.createElement("button");b.className="tile";b.style.background=s[4];
-  b.innerHTML=`<span>${s[1]}</span>${s[2]}`;b.onclick=()=>openSheet(s);$("grid").appendChild(b);
+  b.innerHTML=`<span>${s[1]}</span>${s[2]}`;$("grid").appendChild(b);bindPress(b,s);
   const st=document.createElement("div");st.className="story";
-  st.innerHTML=`<div class="ring"><div>${s[1]}</div></div>${s[2]}`;st.onclick=()=>openSheet(s);$("stories").appendChild(st);
+  st.innerHTML=`<div class="ring"><div>${s[1]}</div></div>${s[2]}`;$("stories").appendChild(st);bindPress(st,s);
 });
 function cmd(){const t=$("sInput").value.trim();return `/${cur[0]}`+(t?` ${t}`:"")}
 function refresh(){$("sCmd").textContent=cmd()}
