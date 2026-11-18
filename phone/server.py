@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS_DIR = os.path.join(HERE, "..", "clone-dir", "instagram-agent-skill")
-ALLOWED = re.compile(r"^/ig-(reel|caption|carousel|story|plan|profile|viral|audit|comment|reply|dm|repurpose|human)\b")
+ALLOWED = re.compile(r"^/(ig-(reel|caption|carousel|story|plan|profile|viral|audit|comment|reply|dm|repurpose|human)|viral-studio)\b")
 
 class H(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -23,7 +23,7 @@ class H(BaseHTTPRequestHandler):
             self.send_response(400); self.end_headers(); return
         try:
             out = subprocess.run(["claude", "--plugin-dir", SKILLS_DIR, "--allowedTools", "Bash(python3:*)", "-p", cmd],
-                                 capture_output=True, text=True, timeout=300, cwd=HERE).stdout or "(aucune réponse)"
+                                 capture_output=True, text=True, timeout=300, cwd=os.path.join(HERE, "..")) or "(aucune réponse)"
         except Exception as e:
             out = f"Erreur : {e}"
         self.send_response(200); self.send_header("Content-Type", "application/json"); self.end_headers()
